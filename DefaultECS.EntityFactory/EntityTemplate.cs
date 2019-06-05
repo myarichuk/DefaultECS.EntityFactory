@@ -6,10 +6,10 @@ namespace DefaultECS.EntityFactory
     {
         public string Name { get; set; }
 
-        public EntityTemplate Parent { get; set; }
-        public List<EntityTemplate> Children { get; set; }
+        public string Parent { get; set; } //template name of parent
+        public List<string> Children { get; set; } //template names of children
 
-        public List<EntityTemplate> InheritsFrom { get; set; }
+        public List<string> InheritsFrom { get; set; }
 
         public List<ComponentTemplate> Components { get; set; }
     }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using Fasterflect;
 using FastMember;
 
@@ -43,6 +42,12 @@ namespace DefaultECS.EntityFactory
             if(string.IsNullOrWhiteSpace(template.Name))
                 Throw.Exception<ArgumentNullException>(nameof(name), "Template's name should not be null. It is used to resolve the type of component object at runtime.");
 
+            return TryCreateComponent(template, out component);
+        }
+
+        public bool TryCreateComponent(ComponentTemplate template, out object component)
+        {
+            var name = template.Name;
             if (template.IsShared)
             {
                 Debug.Assert(name != null, nameof(name) + " != null"); //at this point should never be null...
@@ -60,9 +65,9 @@ namespace DefaultECS.EntityFactory
 
             object InstantiateAndInitialize(ComponentTemplate componentTemplate)
             {
-                if(componentTemplate.Type.IsClass)
+                if (componentTemplate.Type.IsClass)
                     return componentTemplate.Type.TryCreateInstance(componentTemplate.Defaults ?? EmptyParams);
-                
+
                 //if we are a struct, assume we have only parameterless ctor
                 var instance = componentTemplate.Type.CreateInstance();
                 if (componentTemplate.Defaults?.Count > 0)

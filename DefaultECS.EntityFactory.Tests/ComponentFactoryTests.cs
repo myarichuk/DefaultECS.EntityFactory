@@ -71,7 +71,7 @@ namespace DefaultECS.EntityFactory.Tests
         public void Should_throw_argument_null_on_null_name()
         {
             var factory = new ComponentFactory(new DictionaryComponentTemplateResolver(new Dictionary<string, ComponentTemplate>()));
-            Assert.Throws<ArgumentNullException>(() => factory.TryCreateComponent(null, out _));
+            Assert.Throws<ArgumentNullException>(() => factory.TryCreateComponent((string)null, out _));
         }
 
         [Fact]

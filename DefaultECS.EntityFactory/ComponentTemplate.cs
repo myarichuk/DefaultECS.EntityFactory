@@ -5,7 +5,14 @@ namespace DefaultECS.EntityFactory
 {
     public sealed class ComponentTemplate
     {
-        public string Name => Type?.Name;
+        private string _name;
+
+        public string Name
+        {
+            get => _name ?? Type?.Name;
+            set => _name = value;
+        }
+
         public Type Type { get; set; }
         public Dictionary<string, object> Defaults { get; set; }
 
