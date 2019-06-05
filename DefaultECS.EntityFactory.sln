@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultECS.EntityFactory", "DefaultECS.EntityFactory\DefaultECS.EntityFactory.csproj", "{C08379CA-F1B4-43E8-AC4C-E8DBD4138877}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultECS.EntityFactory.Tests", "DefaultECS.EntityFactory.Tests\DefaultECS.EntityFactory.Tests.csproj", "{304A904B-67D3-4DA5-BCC1-8AAD9ADE1288}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C08379CA-F1B4-43E8-AC4C-E8DBD4138877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C08379CA-F1B4-43E8-AC4C-E8DBD4138877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C08379CA-F1B4-43E8-AC4C-E8DBD4138877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C08379CA-F1B4-43E8-AC4C-E8DBD4138877}.Release|Any CPU.Build.0 = Release|Any CPU
+		{304A904B-67D3-4DA5-BCC1-8AAD9ADE1288}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{304A904B-67D3-4DA5-BCC1-8AAD9ADE1288}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{304A904B-67D3-4DA5-BCC1-8AAD9ADE1288}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{304A904B-67D3-4DA5-BCC1-8AAD9ADE1288}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BBDBE751-8C9D-4C57-A8D2-2FF520CFA94A}
+	EndGlobalSection
+EndGlobal
