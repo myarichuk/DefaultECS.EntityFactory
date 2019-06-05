@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Text;
 using DefaultEcs;
-using Fasterflect;
 
 namespace DefaultECS.EntityFactory
 {
@@ -45,7 +39,7 @@ namespace DefaultECS.EntityFactory
                 {
                     if (!_componentSetMethodsByTypes.TryGetValue(componentTemplate.Type, out var setMethod))
                     {
-                        //TODO: make this faster with DynamicDelegate (emit IL dynamic methods for each component type)
+                        //TODO: make this faster with DynamicDelegate (emit IL dynamically for Set() - per component type)
                         setMethod = TypelessSetMethod.MakeGenericMethod(componentTemplate.Type);
                         _componentSetMethodsByTypes.Add(componentTemplate.Type, setMethod);
                     }
