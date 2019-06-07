@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DefaultEcs;
 
@@ -11,7 +12,6 @@ namespace DefaultECS.EntityFactory
         private readonly World _world;
         private readonly ComponentFactory _componentFactory;
         private readonly Dictionary<Type, MethodInfo> _componentSetMethodsByTypes = new Dictionary<Type, MethodInfo>();
-        private static readonly Type EntityType = typeof(Entity);
 
         private static readonly MethodInfo TypelessSetMethod =
             typeof(Entity).GetMethod("Set", BindingFlags.Public | BindingFlags.Instance);
@@ -32,8 +32,29 @@ namespace DefaultECS.EntityFactory
 
         public bool TryCreate(EntityTemplate template, out Entity entity)
         {
+            if (template.Parent == null &&
+                (template.Children == null || template.Children.Count == 0))
+            {
+                return TryCreateSingleEntityInternal(template, out entity);
+            }
+
+            return TryCreateEntityHierarchyInternal(out entity);
+        }
+
+        private static bool TryCreateEntityHierarchyInternal(out Entity entity)
+        {
+            entity = default;
+            return true;
+        }
+
+        private bool TryCreateSingleEntityInternal(EntityTemplate template, out Entity entity)
+        {
             entity = _world.CreateEntity();
-            foreach (var componentTemplate in template.Components)
+
+            //component types that are higher in inheritance hierarchy will override the ones from lower hierarchy positions
+            //TODO: add logging/explanation information on which components were overridden - will help with debugging content later
+            foreach (var componentTemplate in CollectInheritedComponents(template)
+                .Distinct(ComponentTemplate.Comparer))
             {
                 if (_componentFactory.TryCreateComponent(componentTemplate, out var componentInstance))
                 {
@@ -43,12 +64,33 @@ namespace DefaultECS.EntityFactory
                         setMethod = TypelessSetMethod.MakeGenericMethod(componentTemplate.Type);
                         _componentSetMethodsByTypes.Add(componentTemplate.Type, setMethod);
                     }
-                    
-                    setMethod.Invoke(entity, new []{ componentInstance });
+
+                    setMethod.Invoke(entity, new[] {componentInstance});
                 }
             }
 
             return true;
+        }
+
+        private IEnumerable<ComponentTemplate> CollectInheritedComponents(EntityTemplate template)
+        {
+            if(template == null) //precaution
+                yield break;
+
+            
+            foreach (var componentTemplate in template.Components)
+                yield return componentTemplate;         
+
+            foreach (var templateName in template.InheritsFrom ?? Enumerable.Empty<string>())
+            {
+                var inheritedTemplate = _templateResolver.ResolveEntityTemplate(templateName);
+                if (inheritedTemplate == null) 
+                    continue;
+
+                foreach (var componentTemplate in CollectInheritedComponents(inheritedTemplate))
+                    yield return componentTemplate;
+            }
+
         }
     }
 }
