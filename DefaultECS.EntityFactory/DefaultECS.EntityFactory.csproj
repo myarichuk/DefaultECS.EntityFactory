@@ -8,21 +8,17 @@
     <Company />
     <Copyright>Michael Yarichuk</Copyright>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <PackageTags>defaultecs, ecs,</PackageTags>
-    <RepositoryType>Utility Library</RepositoryType>
+    <PackageTags>defaultecs, ecs, entity-component-system</PackageTags>
+    <RepositoryType>Helper Library</RepositoryType>
     <RepositoryUrl>https://github.com/myarichuk/DefaultECS.EntityFactory</RepositoryUrl>
     <Description>Utility library for the awesome DefaultECS Entity-Framework-System to compose complex entity hierarchies from templates. Also implements template multiple inheritance and composition of hierarchy from text files.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DefaultEcs" Version="0.10.1" />
+    <PackageReference Include="Fasterflect.Netstandard" Version="1.0.9" />
     <PackageReference Include="FastMember" Version="1.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Fasterflect.Netstandard">
-      <HintPath>..\Libs\Fasterflect.Netstandard.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
