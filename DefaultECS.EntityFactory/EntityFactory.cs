@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using DefaultEcs;
-using Microsoft.Extensions.ObjectPool;
 
 namespace DefaultECS.EntityFactory
 {
@@ -152,33 +151,6 @@ namespace DefaultECS.EntityFactory
                     yield return componentTemplate;
             }
 
-        }
-
-        private class PooledCollectionPolicy<TData, TCollection> : IPooledObjectPolicy<TCollection> 
-            where TCollection : ICollection<TData>, new()
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public TCollection Create() => new TCollection();
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool Return(TCollection obj)
-            {
-                obj.Clear();                
-                return true;
-            }
-        }
-        
-        private class QueuePolicy<TData> : IPooledObjectPolicy<Queue<TData>>             
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Queue<TData> Create() => new Queue<TData>();
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool Return(Queue<TData> obj)
-            {
-                obj.Clear();
-                return true;
-            }
-        }
+        }   
     }
 }
