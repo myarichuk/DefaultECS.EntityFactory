@@ -6,8 +6,9 @@ namespace DefaultECS.EntityFactory
     {
         public string Name { get; set; }
 
-        public string Parent { get; set; } //template name of parent
-        public List<string> Children { get; set; } //template names of children
+        //entity hierarchy support
+        public string Parent { get; set; }
+        public List<string> Children { get; set; } 
 
         public List<string> InheritsFrom { get; set; }
 

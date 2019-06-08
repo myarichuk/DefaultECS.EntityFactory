@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.Serialization;
 using Fasterflect;
 using FastMember;
 
@@ -66,10 +67,35 @@ namespace DefaultECS.EntityFactory
             object InstantiateAndInitialize(ComponentTemplate componentTemplate)
             {
                 if (componentTemplate.Type.IsClass)
-                    return componentTemplate.Type.TryCreateInstance(componentTemplate.Defaults ?? EmptyParams);
+                {
+                    try
+                    {
+                        return componentTemplate.Type.TryCreateInstance(componentTemplate.Defaults ?? EmptyParams);
+                    }
+                    catch (MissingMethodException) //didn't find ctor for params provided...
+                    {
+                        //try the parameterless ctor and manually set the params
+                        return CreateInstanceWithDefaultCtor(componentTemplate);
+                    }
+                }
 
                 //if we are a struct, assume we have only parameterless ctor
-                var instance = componentTemplate.Type.CreateInstance();
+
+                return CreateInstanceWithDefaultCtor(componentTemplate);
+            }
+
+            object CreateInstanceWithDefaultCtor(ComponentTemplate componentTemplate)
+            {
+                object instance;
+                try
+                {
+                    instance = componentTemplate.Type.CreateInstance();
+                }
+                catch (MissingMemberException)
+                {
+                    instance = FormatterServices.GetUninitializedObject(componentTemplate.Type);
+                }
+
                 if (componentTemplate.Defaults?.Count > 0)
                 {
                     Debug.Assert(name != null, nameof(name) + " != null"); //at this point should never be null...

@@ -180,6 +180,43 @@ namespace DefaultECS.EntityFactory.Tests
             Assert.True(factory.TryCreateComponent(nameof(BarfooComponent), out var component2));
             Assert.Same(component, component2);
         }
+        /*
+ new EntityTemplate
+                        {
+                            Name = "ChildSecondLevel",
+                            Components = new List<ComponentTemplate>
+                            {
+                                new ComponentTemplate
+                                {
+                                    Type = typeof(ComponentFactoryTests.FoobarComponent),
+                                    Defaults = new Dictionary<string, object>
+                                    {
+                                        { "ValueProperty", 123.456 }
+                                    }
+                                }
+                            }
+                        }         
+         */
+
+
+        [Fact]
+        public void Can_resolve_and_initialize_fields_and_properties_and_without_ctor_params()
+        {
+            var factory = new ComponentFactory(new DictionaryComponentTemplateResolver(new Dictionary<string, ComponentTemplate>
+            {
+                { nameof(FoobarComponent), new ComponentTemplate
+                {
+                    Type = typeof(FoobarComponent), 
+                    Defaults = new Dictionary<string, object>
+                    {
+                        { "ValueProperty", 456.456 },
+                    }
+                } }
+            }));
+
+            Assert.True(factory.TryCreateComponent<FoobarComponent>(nameof(FoobarComponent), out var component));
+            Assert.Equal(456.456,component.ValueProperty);
+        }
 
         [Fact]
         public void Can_resolve_and_initialize_fields_and_properties_and_ctor_params()

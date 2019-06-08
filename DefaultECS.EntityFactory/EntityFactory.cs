@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using DefaultEcs;
+using Microsoft.Extensions.ObjectPool;
 
 namespace DefaultECS.EntityFactory
 {
+    //note: this is NOT thread-safe by design
     public class EntityFactory
     {
         private readonly ITemplateResolver _templateResolver;
@@ -13,9 +16,12 @@ namespace DefaultECS.EntityFactory
         private readonly ComponentFactory _componentFactory;
         private readonly Dictionary<Type, MethodInfo> _componentSetMethodsByTypes = new Dictionary<Type, MethodInfo>();
 
+        private readonly Dictionary<string, EntityTemplate> _entityTemplateCache = new Dictionary<string, EntityTemplate>();
+        private readonly Queue<(Entity parent, EntityTemplate template)> _traversalQueue = new Queue<(Entity parent, EntityTemplate template)>();
+
         private static readonly MethodInfo TypelessSetMethod =
             typeof(Entity).GetMethod("Set", BindingFlags.Public | BindingFlags.Instance);
-
+    
         public EntityFactory(ITemplateResolver templateResolver, World world)
         {
             _templateResolver = templateResolver;
@@ -32,24 +38,79 @@ namespace DefaultECS.EntityFactory
 
         public bool TryCreate(EntityTemplate template, out Entity entity)
         {
-            if (template.Parent == null &&
-                (template.Children == null || template.Children.Count == 0))
+            if (template.Parent == null && (template.Children == null || template.Children.Count == 0))
             {
-                return TryCreateSingleEntityInternal(template, out entity);
+                entity = CreateSingleEntityInternal(template);
+                return true;
             }
 
-            return TryCreateEntityHierarchyInternal(out entity);
+            return TryCreateEntityGraphInternal(template, out entity);
         }
 
-        private static bool TryCreateEntityHierarchyInternal(out Entity entity)
+        private bool TryCreateEntityGraphInternal(EntityTemplate template, out Entity rootEntity)
         {
-            entity = default;
+            rootEntity = default;
+
+            //precaution
+            if (template.Parent == null && (template.Children == null || template.Children.Count == 0))
+                return false;
+
+            var parent = template.Parent;
+
+            EntityTemplate rootTemplate = null;
+
+            //first find the root
+            while (parent != null)
+            {
+               rootTemplate = _templateResolver.ResolveEntityTemplate(parent);
+                if (rootTemplate == null)
+                    return false; //TODO: consider throwing exception here...
+
+                _entityTemplateCache.TryAdd(parent, rootTemplate);
+                parent = rootTemplate.Parent;
+            }
+
+            rootTemplate = rootTemplate ?? template;
+            var currentEntity = CreateSingleEntityInternal(rootTemplate);
+            rootEntity = currentEntity; //we want to return the root of the hierarchy
+            _traversalQueue.Clear();
+            _traversalQueue.EnqueueAll(ResolveChildren(rootTemplate).Select(t => (currentEntity, t)));
+
+            while (_traversalQueue.Count > 0)
+            {
+                var childInfo = _traversalQueue.Dequeue();
+                var childEntity = CreateSingleEntityInternal(childInfo.template);
+                childEntity.SetAsChildOf(in childInfo.parent);
+
+                _traversalQueue.EnqueueAll(ResolveChildren(childInfo.template).Select(t => (childEntity, t)));
+            }
+
+            IEnumerable<EntityTemplate> ResolveChildren(EntityTemplate parentTemplate)
+            {
+                foreach (var childName in parentTemplate?.Children ?? Enumerable.Empty<string>())
+                {
+                    if (_entityTemplateCache.TryGetValue(childName, out var resolvedTemplate) &&
+                        resolvedTemplate != null /*precaution, should never happen*/)
+                    {
+                        yield return resolvedTemplate;
+                        continue;
+                    }
+
+                    resolvedTemplate = _templateResolver.ResolveEntityTemplate(childName);
+                    if (resolvedTemplate != null)
+                    {
+                        _entityTemplateCache.TryAdd(childName, resolvedTemplate);
+                        yield return resolvedTemplate;
+                    }
+                }
+            }
+
             return true;
         }
 
-        private bool TryCreateSingleEntityInternal(EntityTemplate template, out Entity entity)
+        private Entity CreateSingleEntityInternal(EntityTemplate template)
         {
-            entity = _world.CreateEntity();
+            var entity = _world.CreateEntity();
 
             //component types that are higher in inheritance hierarchy will override the ones from lower hierarchy positions
             //TODO: add logging/explanation information on which components were overridden - will help with debugging content later
@@ -69,7 +130,7 @@ namespace DefaultECS.EntityFactory
                 }
             }
 
-            return true;
+            return entity;
         }
 
         private IEnumerable<ComponentTemplate> CollectInheritedComponents(EntityTemplate template)
@@ -91,6 +152,33 @@ namespace DefaultECS.EntityFactory
                     yield return componentTemplate;
             }
 
+        }
+
+        private class PooledCollectionPolicy<TData, TCollection> : IPooledObjectPolicy<TCollection> 
+            where TCollection : ICollection<TData>, new()
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public TCollection Create() => new TCollection();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool Return(TCollection obj)
+            {
+                obj.Clear();                
+                return true;
+            }
+        }
+        
+        private class QueuePolicy<TData> : IPooledObjectPolicy<Queue<TData>>             
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Queue<TData> Create() => new Queue<TData>();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool Return(Queue<TData> obj)
+            {
+                obj.Clear();
+                return true;
+            }
         }
     }
 }
