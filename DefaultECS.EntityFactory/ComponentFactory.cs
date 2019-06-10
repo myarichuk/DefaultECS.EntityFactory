@@ -66,22 +66,19 @@ namespace DefaultECS.EntityFactory
 
             object InstantiateAndInitialize(ComponentTemplate componentTemplate)
             {
-                if (componentTemplate.Type.IsClass)
+                if (!componentTemplate.Type.IsClass) 
+                    return CreateInstanceWithDefaultCtor(componentTemplate);
+                try
                 {
-                    try
-                    {
-                        return componentTemplate.Type.TryCreateInstance(componentTemplate.Defaults ?? EmptyParams);
-                    }
-                    catch (MissingMethodException) //didn't find ctor for params provided...
-                    {
-                        //try the parameterless ctor and manually set the params
-                        return CreateInstanceWithDefaultCtor(componentTemplate);
-                    }
+                    return componentTemplate.Type.TryCreateInstance(componentTemplate.Defaults ?? EmptyParams);
                 }
+                catch (MissingMethodException) //didn't find ctor for params provided...
+                {
+                    //try the parameterless ctor and manually set the params
+                    //especially if we are a struct - assume we have only parameterless ctor
 
-                //if we are a struct, assume we have only parameterless ctor
-
-                return CreateInstanceWithDefaultCtor(componentTemplate);
+                    return CreateInstanceWithDefaultCtor(componentTemplate);
+                }
             }
 
             object CreateInstanceWithDefaultCtor(ComponentTemplate componentTemplate)
@@ -91,7 +88,7 @@ namespace DefaultECS.EntityFactory
                 {
                     instance = componentTemplate.Type.CreateInstance();
                 }
-                catch (MissingMemberException)
+                catch (MissingMemberException) //no default ctor
                 {
                     instance = FormatterServices.GetUninitializedObject(componentTemplate.Type);
                 }

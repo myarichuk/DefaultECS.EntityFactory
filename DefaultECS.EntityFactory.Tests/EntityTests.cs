@@ -226,7 +226,7 @@ namespace DefaultECS.EntityFactory.Tests
             Assert.True(factory.TryCreate(resolver.ResolveEntityTemplate("ChildSecondLevel"), out var rootEntity));
 
             var firstLevelChildren = rootEntity.GetChildren().ToArray();
-
+            
             ref var foobarStructComponent = ref rootEntity.Get<ComponentFactoryTests.FoobarStructComponent>();
             ref var structComponentWithEnum = ref firstLevelChildren[0].Get<ComponentFactoryTests.StructComponentWithEnum>();
 
